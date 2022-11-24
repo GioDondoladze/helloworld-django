@@ -1,0 +1,21 @@
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 778404080221.dkr.ecr.us-east-1.amazonaws.com
+      - REPO_URI=$AWS_ACCOUNT_ID.dkr.ecr.eu-central-1.amazonaws.com/giorep
+      - IMAGE_TAG=$(echo $VERSION.$CODEBUILD_BUILD_NUMBER)
+  build:
+    commands:
+      - docker build -t giorep .
+      - echo rename image
+      - docker tag giorep:latest 778404080221.dkr.ecr.us-east-1.amazonaws.com/giorep:latest
+      - docker push 778404080221.dkr.ecr.us-east-1.amazonaws.com/giorep:latest
+      - printf '[{"name":"Giopipeline","imageUri":"%s"}]' $REPO_URI:$IMAGE_TAG > Giopipeline-imagedefinitions.json
+      - docker image ls
+  post_build:
+    commands:
+      - echo finish
+artifacts:
+  files:
+    - giorep-imagedefinitions.json
